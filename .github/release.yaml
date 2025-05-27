@@ -1,0 +1,11 @@
+changelog:
+  categories:
+    - title: 🏕 Features
+      labels:
+        - "*"
+      exclude:
+        labels:
+          - bugs
+    - title: 🛠 BugFix
+      labels:
+        - "bugs"
