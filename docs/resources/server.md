@@ -59,6 +59,7 @@ resource "k3s_server" "main" {
 
 ### Optional
 
+- `bin_dir` (String) Value of a path used to put the k3s binary
 - `config` (String) K3s server config
 - `password` (String, Sensitive) Username of the target server
 - `port` (Number) Override default SSH port (22)

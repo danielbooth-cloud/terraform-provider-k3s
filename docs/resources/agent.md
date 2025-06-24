@@ -79,6 +79,7 @@ resource "k3s_agent" "worker" {
 
 ### Optional
 
+- `bin_dir` (String) Value of a path used to put the k3s binary
 - `config` (String) K3s server config
 - `password` (String, Sensitive) Username of the target server
 - `port` (Number) Override default SSH port (22)
