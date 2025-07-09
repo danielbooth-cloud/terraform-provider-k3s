@@ -45,14 +45,14 @@ func (s *ServerClientModel) sshClient(ctx context.Context) (ssh_client.SSHClient
 		port = int(s.Port.ValueInt32())
 	}
 
-	addr := fmt.Sprintf("%s:%d", s.Host.ValueString(), port)
-	return ssh_client.NewSSHClient(ctx, addr, s.User.ValueString(), s.PrivateKey.ValueString(), s.Password.ValueString())
+	return ssh_client.NewSSHClient(ctx, s.Host.ValueString(), port, s.User.ValueString(), s.PrivateKey.ValueString(), s.Password.ValueString())
 }
 
 type HaConfig struct {
 	ClusterInit types.Bool   `tfsdk:"cluster_init"`
 	Token       types.String `tfsdk:"token"`
 	Server      types.String `tfsdk:"server"`
+	KubeConfig  types.String `tfsdk:"kubeconfig"`
 }
 
 func (m HaConfig) AttributeTypes() map[string]attr.Type {
@@ -60,6 +60,7 @@ func (m HaConfig) AttributeTypes() map[string]attr.Type {
 		"cluster_init": types.BoolType,
 		"token":        types.StringType,
 		"server":       types.StringType,
+		"kubeconfig":   types.StringType,
 	}
 }
 
@@ -193,6 +194,11 @@ func (s *K3sServerResource) Schema(context context.Context, resource resource.Sc
 						Optional:            true,
 						Sensitive:           true,
 						MarkdownDescription: "Server token used for joining nodes to the cluster",
+					},
+					"kubeconfig": schema.StringAttribute{
+						Optional:            true,
+						Sensitive:           true,
+						MarkdownDescription: "KubeConfig for the cluster",
 					},
 				},
 			},
@@ -332,8 +338,15 @@ func (s *K3sServerResource) Delete(ctx context.Context, req resource.DeleteReque
 		return
 	}
 
+	kubeconfig := ""
+	if !data.HaConfig.IsNull() {
+		var haConfig HaConfig
+		data.HaConfig.As(ctx, &haConfig, basetypes.ObjectAsOptions{})
+		kubeconfig = haConfig.KubeConfig.ValueString()
+	}
+
 	server := k3s.NewK3sServerComponent(ctx, nil, nil, nil, data.BinDir.ValueString())
-	if err := server.RunUninstall(sshClient); err != nil {
+	if err := server.RunUninstall(sshClient, kubeconfig); err != nil {
 		resp.Diagnostics.AddError("Creating uninstall k3s", err.Error())
 		return
 	}
