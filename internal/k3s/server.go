@@ -88,6 +88,7 @@ func (s *server) AddHA(cluster_init bool, token string, server string) {
 	}
 	if token != "" {
 		s.token = token
+		s.config["token"] = token
 	}
 	if server != "" {
 		s.config["server"] = server
